@@ -43,9 +43,8 @@ class myDataset(data.Dataset):
             temp_full_path = [os.path.join(wsi_direc, x) for x in patch_name_list]
 
             grid.extend(temp_full_path)
-            print(slides_label[i])
             # patch label is WSI label
-            patch_level_label.extend(slides_label[i] * len(patch_name_list))
+            patch_level_label.extend([slides_label[i]] * len(patch_name_list))
         print('Number of tiles: {}'.format(len(grid)))
         print('Number of label: {}'.format(len(patch_level_label)))
 
@@ -137,6 +136,8 @@ if __name__ == '__main__':
 
     train_set = myDataset()
     train_set.setmode(1)
+
+    print(train_set[rand])
 
     img = Image.open(train_set[rand])
     print(img[:, :20, 1])
