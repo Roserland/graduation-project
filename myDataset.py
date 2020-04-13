@@ -118,10 +118,26 @@ if __name__ == '__main__':
     slides_label = coords['TypeName'].to_list()
 
     grid = []
+    patch_level_label = []
+
     for i, wsi_direc in enumerate(slides_path):
-        patch_name_list = os.listdir(g)  # g is a slide directory path
+        patch_name_list = os.listdir(wsi_direc)  # g is a slide directory path
+
         # add prefix, so the patch has its full path
         temp_full_path = [os.path.join(wsi_direc, x) for x in patch_name_list]
 
         grid.extend(temp_full_path)
+        # patch label is WSI label
+        patch_level_label.extend(slides_label[i] * len(patch_name_list))
+    print('Number of tiles: {}'.format(len(grid)))
+    
+    len_grid = len(grid)
+    rand = np.random.randint(0, len_grid)
+
+    img = Image.open(grid[rand])
+
+    img.save('./temp.jpg', 'JPG')
+
+    print("finished")
+
 
