@@ -43,9 +43,11 @@ class myDataset(data.Dataset):
             temp_full_path = [os.path.join(wsi_direc, x) for x in patch_name_list]
 
             grid.extend(temp_full_path)
+            print(slides_label[i])
             # patch label is WSI label
             patch_level_label.extend(slides_label[i] * len(patch_name_list))
         print('Number of tiles: {}'.format(len(grid)))
+        print('Number of label: {}'.format(len(patch_level_label)))
 
         assert len(patch_level_label) == len(grid)
 
@@ -77,7 +79,7 @@ class myDataset(data.Dataset):
 
     def __getitem__(self, index):
         if self.mode == 1:
-            slideIDX = self.slideIDX[index]
+            slideIDX = self.patch_labels[index]
             coord = self.grid[index]
 
             img = Image.open(grid[index])
@@ -129,8 +131,7 @@ if __name__ == '__main__':
         grid.extend(temp_full_path)
         # patch label is WSI label
         patch_level_label.extend(slides_label[i] * len(patch_name_list))
-    print('Number of tiles: {}'.format(len(grid)))
-    
+
     len_grid = len(grid)
     rand = np.random.randint(0, len_grid)
 
