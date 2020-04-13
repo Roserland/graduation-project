@@ -1,0 +1,4 @@
+{
+  "train_csv_path":"./coords/coords.csv",
+  "train_labels":"./train_labels.csv"
+}
