@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 import random
-import openslide
+# import openslide
 import PIL.Image as Image
 import torch
 import json
@@ -11,14 +11,14 @@ import json
 # import torch.optim as optim
 # import torch.backends.cudnn as cudnn
 # import torch.nn.functional as F
-# import torch.utils.data as data
+import torch.utils.data as data
 # import torchvision.transforms as transforms
 # import torchvision.models as models
 
 def addPrefix(prefix, fileName):
     return os.path.join(prefix, fileName)
 
-class myDataset():
+class myDataset(data.Dataset):
     def __init__(self):
         def __init__(self, csv_path='./coords/threeTypes_train.csv', transform=None):
             coords = pd.read_csv(csv_path)
@@ -134,10 +134,15 @@ if __name__ == '__main__':
     len_grid = len(grid)
     rand = np.random.randint(0, len_grid)
 
-    img = Image.open(grid[rand])
+    train_set = myDataset()
+    train_set.setmode(1)
 
-    img.save('./temp.jpg', 'JPG')
+    img = Image.open(train_set[rand])
+    print(img[:, :20, 1])
 
-    print("finished")
+    img.save('./temp.jpg')
+
+    print('finished')
+
 
 
