@@ -3,7 +3,6 @@ import os
 import pandas as pd
 import numpy as np
 import random
-# import openslide
 import PIL.Image as Image
 import torch
 import json
@@ -24,7 +23,9 @@ class myDataset(data.Dataset):
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
-        slides = []
+
+        label_dict = {'UCEC': 0, 'PAAD': 1, 'CESC': 2}
+
         # for i, name in enumerate(lib['slides']):
         #     sys.stdout.write('Opening SVS headers: [{}/{}]\r'.format(i + 1, len(lib['slides'])))
         #     sys.stdout.flush()
@@ -44,9 +45,9 @@ class myDataset(data.Dataset):
 
             grid.extend(temp_full_path)
             # patch label is WSI label
-            patch_level_label.extend([slides_label[i]] * len(patch_name_list))
+            temp_label = label_dict[slides_label[i]]
+            patch_level_label.extend([temp_label] * len(patch_name_list))
         print('Number of tiles: {}'.format(len(grid)))
-        print('Number of label: {}'.format(len(patch_level_label)))
 
         assert len(patch_level_label) == len(grid)
 
@@ -78,8 +79,8 @@ class myDataset(data.Dataset):
 
     def __getitem__(self, index):
         if self.mode == 1:
-            slideIDX = self.patch_labels[index]
-            coord = self.grid[index]
+            # slideIDX = self.patch_labels[index]
+            # coord = self.grid[index]
 
             img = Image.open(grid[index])
             # img = self.slides[slideIDX].read_region(coord, self.level, (self.size, self.size)).convert('RGB')
@@ -91,8 +92,9 @@ class myDataset(data.Dataset):
                 img = self.transform(img)
             return img
         elif self.mode == 2:
-            slideIDX, coord, target = self.t_data[index]
-            img, target = self.patch_labels[index]
+            # slideIDX, coord, target = self.t_data[index]
+            img = Image.open(grid[index])
+            target = self.patch_labels[index]
             # img = self.slides[slideIDX].read_region(coord, self.level, (self.size, self.size)).convert('RGB')
             # if self.mult != 1:
             #     img = img.resize((224, 224), Image.BILINEAR)
@@ -137,12 +139,10 @@ if __name__ == '__main__':
     train_set = myDataset()
     train_set.setmode(1)
 
-    print(train_set[rand])
+    img_arr = np.array(train_set[rand])
+    print(img_arr[:, :20, 1])
 
-    img = Image.open(train_set[rand])
-    print(img[:, :20, 1])
-
-    img.save('./temp.jpg')
+    train_set[rand].save('./temp.jpg')
 
     print('finished')
 
