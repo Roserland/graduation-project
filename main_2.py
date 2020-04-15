@@ -1,3 +1,7 @@
+# This file test the random selected tiles to train a
+# patch-level model f1
+# Then use f1 to predict WSI label.
+
 import sys
 import os
 import argparse
@@ -14,28 +18,27 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import logging
 
-from myDataset import myDataset
+from myDataset import randSet
 
 parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile classifier training script')
 parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
-parser.add_argument('--valid', type=bool, default=False, help='path to validation MIL library binary. If present.')
+parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
 parser.add_argument('--output', type=str, default='./', help='name of output file')
 parser.add_argument('--batch_size', type=int, default=512, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
-parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
+parser.add_argument('--test_every', default=5, type=int, help='test on val every (default: 10)')
 parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
 parser.add_argument('--k', default=10, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+parser.add_argument('--sample', default=100, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level = logging.INFO)
-handler = logging.FileHandler("./log.txt")
+handler = logging.FileHandler("./log_main2.txt")
 handler.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 logger.addHandler(handler)
-
-best_acc = 0
 
 def main():
 
@@ -58,13 +61,13 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = myDataset(csv_path='./coords/threeTypes_train.csv', transform=trans)
+    train_dset = randSet(csv_path='./coords/threeTypes_train.csv', sampleNum=args.sample, transform=trans)
     train_loader = torch.utils.data.DataLoader(
         train_dset,
-        batch_size=args.batch_size, shuffle=False,
+        batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=False)
     if args.valid:
-        val_dset = myDataset(csv_path='./coords/threeTypes_test.csv', transform=trans)
+        val_dset = randSet(csv_path='./coords/threeTypes_test.csv', sampleNum=args.sample, transform=trans)
         val_loader = torch.utils.data.DataLoader(
             val_dset,
             batch_size=args.batch_size, shuffle=False,
@@ -77,20 +80,6 @@ def main():
 
     #loop throuh epochs
     for epoch in range(args.nepochs):
-        # for evaluation,
-        train_dset.setmode(1)
-
-        # slideIDX --> Patch_level label
-
-        # get all problities of all patches in the loader
-        probs = inference(epoch, train_loader, model)
-
-        # choss top-k patches with high probilities to train
-        # topk is an index
-        topk = group_argtopk(np.array(train_dset.patch_labels), probs, args.k)
-        # make train data, and shuffle it
-        train_dset.maketraindata(topk)
-        train_dset.shuffletraindata()
 
         # training part
         train_dset.setmode(2)
@@ -103,22 +92,27 @@ def main():
 
         # Validation
         if args.val_lib and (epoch + 1) % args.test_every == 0:
-            val_dset.setmode(1)
-            probs = inference(epoch, val_loader, model)
-            maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.targets))
-            pred = [1 if x >= 0.5 else 0 for x in maxs]
-            err, fpr, fnr = calc_err(pred, val_dset.targets)
-            print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
-                                                                                   fnr))
+            val_dset.setmode(2)
+            model.eval()
+            acc_num = 0
+            with torch.no_grad():
+                for i, (input, label) in enumerate(val_loader):
+                    print('Test\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, args.nepochs, i + 1, len(val_loader)))
+                    input = input.cuda()
+                    pred = model(input).numpy()
+                    pred = np.argmax(pred, axis=1)
+
+                    acc_num += (pred == np.array(label)).sum()
+            acc = acc_num / len(val_dset)
+
+            print('Validation\tEpoch: [{}/{}]\tACC: {}'.format(epoch + 1, args.nepochs, acc))
+
             fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
-            fconv.write('{},error,{}\n'.format(epoch + 1, err))
-            fconv.write('{},fpr,{}\n'.format(epoch + 1, fpr))
-            fconv.write('{},fnr,{}\n'.format(epoch + 1, fnr))
+            fconv.write('{},acc,{}\n'.format(epoch + 1, acc))
             fconv.close()
-            # Save best model
-            err = (fpr + fnr) / 2.
-            if 1 - err >= best_acc:
-                best_acc = 1 - err
+            
+            if acc > best_acc:
+                best_acc = acc
                 obj = {
                     'epoch': epoch + 1,
                     'state_dict': model.state_dict(),
@@ -126,6 +120,7 @@ def main():
                     'optimizer': optimizer.state_dict()
                 }
                 torch.save(obj, os.path.join(args.output, 'checkpoint_best.pth'))
+                torch.save(optimizer.state_dict(), 'weight.pth')
 
 
 def inference(run, loader, model):
@@ -152,6 +147,15 @@ def train(run, loader, model, criterion, optimizer):
         optimizer.step()
         running_loss += loss.item()*input.size(0)
     return running_loss/len(loader.dataset)
+
+def test(run, loader, model, criterion, optimizer):
+    model.eval()
+    with torch.no_grad():
+        for i, input in enumerate(loader):
+            print('Test\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(run + 1, args.nepochs, i + 1, len(loader)))
+            input = input.cuda()
+            output = model(input)
+
 
 def calc_err(pred,real):
     pred = np.array(pred)
