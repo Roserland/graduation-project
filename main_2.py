@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile clas
 parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
 parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
 parser.add_argument('--output', type=str, default='./', help='name of output file')
-parser.add_argument('--batch_size', type=int, default=512, help='mini-batch size (default: 512)')
+parser.add_argument('--batch_size', type=int, default=64, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
 parser.add_argument('--test_every', default=5, type=int, help='test on val every (default: 10)')
@@ -46,7 +46,7 @@ def main():
     args = parser.parse_args()
 
     # resnet-34, or could change the model for efficiency
-    model = models.resnet34(True)
+    model = models.resnet50(True)
     model.fc = nn.Linear(model.fc.in_features, 3)           # for trible classification
     model.cuda()
 
@@ -91,7 +91,7 @@ def main():
         fconv.close()
 
         # Validation
-        if args.val_lib and (epoch + 1) % args.test_every == 0:
+        if (epoch + 1) % args.test_every == 0:
             val_dset.setmode(2)
             model.eval()
             acc_num = 0
@@ -141,8 +141,8 @@ def train(run, loader, model, criterion, optimizer):
         input = input.cuda()
         target = target.cuda()
 
-        with torch.no_grad():
-            output = model(input)
+        # with torch.no_grad():
+        output = model(input)
 
         loss = criterion(output, target)
         optimizer.zero_grad()
