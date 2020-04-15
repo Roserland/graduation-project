@@ -140,7 +140,10 @@ def train(run, loader, model, criterion, optimizer):
     for i, (input, target) in enumerate(loader):
         input = input.cuda()
         target = target.cuda()
-        output = model(input)
+
+        with torch.no_grad():
+            output = model(input)
+
         loss = criterion(output, target)
         optimizer.zero_grad()
         loss.backward()

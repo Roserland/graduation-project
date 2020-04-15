@@ -202,7 +202,7 @@ class randSet(data.Dataset):
             patch_name_list = os.listdir(wsi_direc)  # g is a slide directory path
 
             # sampling
-            print(len(patch_name_list), sampleNum)
+            # print(len(patch_name_list), sampleNum)
             if len(patch_name_list) < sampleNum:
                 snum = len(patch_name_list)
             else:
