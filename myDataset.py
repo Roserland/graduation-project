@@ -202,6 +202,7 @@ class randSet(data.Dataset):
             patch_name_list = os.listdir(wsi_direc)  # g is a slide directory path
 
             # sampling
+            print(len(patch_name_list), sampleNum)
             if len(patch_name_list) < sampleNum:
                 snum = len(patch_name_list)
             else:
@@ -215,17 +216,14 @@ class randSet(data.Dataset):
             # patch label is WSI label
             temp_label = label_dict[slides_label[i]]
             patch_level_label.extend([temp_label] * len(patch_name_list))
-        print('Number of tiles: {}'.format(len(grid)))
 
         assert len(patch_level_label) == len(grid)
+        print('Number of tiles: {}'.format(len(grid)))
 
         self.grid = grid
         self.patch_labels = patch_level_label
         self.transform = transform
         self.mode = None
-        # self.mult = lib['mult']
-        # self.size = int(np.round(224 * lib['mult']))
-        # self.level = lib['level']
 
     def setmode(self, mode):
         """
@@ -237,47 +235,19 @@ class randSet(data.Dataset):
         """
         self.mode = mode
 
-    def maketraindata(self, idxs):
-        # prepare the (patch, patch_label)
-        self.t_data = [(self.grid[x], self.patch_labels[x]) for x in idxs]
-
-
-    def shuffletraindata(self):
-        # just shuffle
-        self.t_data = random.sample(self.t_data, len(self.t_data))
 
     def __getitem__(self, index):
-        if self.mode == 1:
-            # slideIDX = self.patch_labels[index]
-            # coord = self.grid[index]
+        img = Image.open(self.grid[index])
+        target = self.patch_labels[index]
+        img = img.resize((224, 224), Image.BILINEAR)
 
-            img = Image.open(self.grid[index])
-            # img = self.slides[slideIDX].read_region(coord, self.level, (self.size, self.size)).convert('RGB')
-            # if self.mult != 1:
-            #     img = img.resize((224, 224), Image.BILINEAR)
-            img = img.resize((224, 224), Image.BILINEAR)
+        if self.transform is not None:
+            img = self.transform(img)
 
-            if self.transform is not None:
-                img = self.transform(img)
-            return img
-        elif self.mode == 2:
-            # slideIDX, coord, target = self.t_data[index]
-            img = Image.open(self.grid[index])
-            target = self.patch_labels[index]
-            # img = self.slides[slideIDX].read_region(coord, self.level, (self.size, self.size)).convert('RGB')
-            # if self.mult != 1:
-            #     img = img.resize((224, 224), Image.BILINEAR)
-            img = img.resize((224, 224), Image.BILINEAR)
-
-            if self.transform is not None:
-                img = self.transform(img)
-            return img, target
+        return img, target
 
     def __len__(self):
-        if self.mode == 1:
-            return len(self.grid)
-        elif self.mode == 2:
-            return len(self.t_data)
+        return len(self.grid)
 
 if __name__ == '__main__':
     csv_path = './coords/threeTypes_train.csv'

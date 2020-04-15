@@ -110,7 +110,7 @@ def main():
             fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
             fconv.write('{},acc,{}\n'.format(epoch + 1, acc))
             fconv.close()
-            
+
             if acc > best_acc:
                 best_acc = acc
                 obj = {
