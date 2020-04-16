@@ -87,3 +87,5 @@ def main():
     wsi_acc = (np.array(wsi_pred) == np.array(val_dset.wsi_label)).sum() / len(wsi_pred)
     print("WSI level accuracy is {}".format(wsi_acc))
 
+if __name__ == '__main__':
+    main()
