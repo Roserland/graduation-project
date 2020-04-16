@@ -228,10 +228,12 @@ class randSet(data.Dataset):
         assert len(grid) == wsi_indexs[-1]
         print('Number of tiles: {}'.format(len(grid)))
 
+        num_wsi_label = [label_dict[x] for x in slides_label]
+
         self.grid = grid
         self.patch_labels = patch_level_label
         self.wsi_indexs = wsi_indexs
-        self.wsi_label  = slides_label
+        self.wsi_label  = num_wsi_label
         self.transform = transform
         self.mode = None
 
