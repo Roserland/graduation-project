@@ -84,8 +84,15 @@ def main():
 
         wsi_pred.append(most_common_key)
     print(wsi_pred)
-    
-    wsi_acc = (np.array(wsi_pred) == np.array(val_dset.wsi_label)).sum() / len(wsi_pred)
+
+    pred_arr = np.array(wsi_pred)
+    orig_arr = np.array(val_dset.wsi_label)
+    assert len(orig_arr) == len(pred_arr)
+    print(pred_arr)
+    print(orig_arr)
+
+    wsi_acc = (pred_arr == orig_arr).sum() / len(pred_arr)
+    # wsi_acc = (np.array(wsi_pred) == np.array(val_dset.wsi_label)).astype(int).sum() / len(wsi_pred)
     print("WSI level accuracy is {}".format(wsi_acc))
 
 if __name__ == '__main__':
