@@ -40,6 +40,7 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
+best_acc = 0
 def main():
 
     global args, best_acc
@@ -99,7 +100,7 @@ def main():
                 for i, (input, label) in enumerate(val_loader):
                     print('Test\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, args.nepochs, i + 1, len(val_loader)))
                     input = input.cuda()
-                    pred = model(input).numpy()
+                    pred = model(input).cpu().numpy()
                     pred = np.argmax(pred, axis=1)
 
                     acc_num += (pred == np.array(label)).sum()

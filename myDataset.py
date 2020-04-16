@@ -198,6 +198,8 @@ class randSet(data.Dataset):
 
         patch_level_label = []
         grid = []
+        wsi_indexs = [0]
+        curr_len = 0
         for i, wsi_direc in enumerate(slides_path):
             patch_name_list = os.listdir(wsi_direc)  # g is a slide directory path
 
@@ -212,16 +214,24 @@ class randSet(data.Dataset):
             # add prefix, so the patch has its full path
             temp_full_path = [os.path.join(wsi_direc, x) for x in patch_name_list]
 
+            # prepare WSI index, each number is the begin of a wsi
+            curr_len += snum
+            wsi_indexs.append(curr_len)
+
             grid.extend(temp_full_path)
             # patch label is WSI label
             temp_label = label_dict[slides_label[i]]
             patch_level_label.extend([temp_label] * len(patch_name_list))
 
         assert len(patch_level_label) == len(grid)
+        assert len(wsi_indexs) == len(slides_path) + 1
+        assert len(grid) == wsi_indexs[-1]
         print('Number of tiles: {}'.format(len(grid)))
 
         self.grid = grid
         self.patch_labels = patch_level_label
+        self.wsi_indexs = wsi_indexs
+        self.wsi_label  = slides_label
         self.transform = transform
         self.mode = None
 
