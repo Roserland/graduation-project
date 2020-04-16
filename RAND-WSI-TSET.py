@@ -80,10 +80,11 @@ def main():
 
         # voting
         cnt = Counter(patch_labels)
-        most_common_key = cnt.most_common(0)[0][0]
+        most_common_key = cnt.most_common(1)[0][0]
 
         wsi_pred.append(most_common_key)
-
+    print(wsi_pred)
+    
     wsi_acc = (np.array(wsi_pred) == np.array(val_dset.wsi_label)).sum() / len(wsi_pred)
     print("WSI level accuracy is {}".format(wsi_acc))
 
