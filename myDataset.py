@@ -194,7 +194,7 @@ class randSet(data.Dataset):
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
 
-        label_dict = {'UCEC': 0, 'PAAD': 1, 'CESC': 2}
+        label_dict = {'KICH': 0, 'KIRC': 1, 'KIRP': 2}
 
         patch_level_label = []
         grid = []
