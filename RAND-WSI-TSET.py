@@ -48,7 +48,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.1, 0.1, 0.1])
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
-    val_dset = randSet(csv_path='./coords/threeTypes_test.csv', sampleNum=args.sample, transform=trans)
+    val_dset = randSet(csv_path='./coords/KIPAN_ThreeTypes_Test.csv.csv', sampleNum=args.sample, transform=trans)
     val_loader = torch.utils.data.DataLoader(
         val_dset,
         batch_size=args.batch_size, shuffle=False,

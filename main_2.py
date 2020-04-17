@@ -62,13 +62,13 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = randSet(csv_path='./coords/threeTypes_train.csv', sampleNum=args.sample, transform=trans)
+    train_dset = randSet(csv_path='./coords/KIPAN_ThreeTypes_Train.csv', sampleNum=args.sample, transform=trans)
     train_loader = torch.utils.data.DataLoader(
         train_dset,
         batch_size=args.batch_size, shuffle=True,
         num_workers=args.workers, pin_memory=False)
     if args.valid:
-        val_dset = randSet(csv_path='./coords/threeTypes_test.csv', sampleNum=args.sample, transform=trans)
+        val_dset = randSet(csv_path='./coords/KIPAN_ThreeTypes_Test.csv', sampleNum=args.sample, transform=trans)
         val_loader = torch.utils.data.DataLoader(
             val_dset,
             batch_size=args.batch_size, shuffle=False,

@@ -188,7 +188,7 @@ class myDataset_2(data.Dataset):
 class randSet(data.Dataset):
     # for each WSI, random choose 100 tiles
     # each tile label is the WSI-Level label
-    def __init__(self, csv_path='./coords/threeTypes_train.csv', sampleNum = 100, transform=None):
+    def __init__(self, csv_path='./coords/KIPAN_ThreeTypes_Test.csv', sampleNum = 100, transform=None):
         coords = pd.read_csv(csv_path)
 
         slides_path = coords['Path'].to_list()
