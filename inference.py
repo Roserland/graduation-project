@@ -16,11 +16,14 @@ import logging
 
 from myDataset import myDataset
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# ids = [0,1]
+
 parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile classifier training script')
 parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
 parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
 parser.add_argument('--output', type=str, default='./', help='name of output file')
-parser.add_argument('--batch_size', type=int, default=64, help='mini-batch size (default: 512)')
+parser.add_argument('--batch_size', type=int, default=128, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
 parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
@@ -44,7 +47,7 @@ def main():
 
     # resnet-34, or could change the model for efficiency
     model = models.resnet34(True)
-    model.fc = nn.Linear(model.fc.in_features, 3)           # for trible classification
+    model.fc = nn.Linear(model.fc.in_features, 2)           # for trible classification
     model.cuda()
 
     criterion = nn.CrossEntropyLoss().cuda()
@@ -58,13 +61,13 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = myDataset(csv_path='./LU_TwoTypes_Train.csv', transform=trans)
+    train_dset = myDataset(csv_path='./coords/LU_TwoTypes_Train.csv', transform=trans)
     train_loader = torch.utils.data.DataLoader(
         train_dset,
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=False)
     if args.valid:
-        val_dset = myDataset(csv_path='./LU_TwoTypes_Test.csv', transform=trans)
+        val_dset = myDataset(csv_path='./coords/LU_TwoTypes_Test.csv', transform=trans)
         val_loader = torch.utils.data.DataLoader(
             val_dset,
             batch_size=args.batch_size, shuffle=False,
@@ -103,12 +106,12 @@ def main():
         fconv.close()
 
         # Validation
-        if args.val_lib and (epoch + 1) % args.test_every == 0:
+        if (epoch + 1) % args.test_every == 0:
             val_dset.setmode(1)
             probs = inference(epoch, val_loader, model)
-            maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.targets))
+            maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
             pred = [1 if x >= 0.5 else 0 for x in maxs]
-            err, fpr, fnr = calc_err(pred, val_dset.targets)
+            err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
             print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                                    fnr))
             fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
