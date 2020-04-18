@@ -18,9 +18,9 @@ from myDataset import myDataset
 
 parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile classifier training script')
 parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
-parser.add_argument('--valid', type=bool, default=False, help='path to validation MIL library binary. If present.')
+parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
 parser.add_argument('--output', type=str, default='./', help='name of output file')
-parser.add_argument('--batch_size', type=int, default=512, help='mini-batch size (default: 512)')
+parser.add_argument('--batch_size', type=int, default=64, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
 parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
@@ -58,13 +58,13 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = myDataset(csv_path='./coords/threeTypes_train.csv', transform=trans)
+    train_dset = myDataset(csv_path='./LU_TwoTypes_Train.csv', transform=trans)
     train_loader = torch.utils.data.DataLoader(
         train_dset,
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=False)
     if args.valid:
-        val_dset = myDataset(csv_path='./coords/threeTypes_test.csv', transform=trans)
+        val_dset = myDataset(csv_path='./LU_TwoTypes_Test.csv', transform=trans)
         val_loader = torch.utils.data.DataLoader(
             val_dset,
             batch_size=args.batch_size, shuffle=False,
@@ -84,6 +84,7 @@ def main():
 
         # get all problities of all patches in the loader
         probs = inference(epoch, train_loader, model)
+        print(probs.shape)
 
         # choss top-k patches with high probilities to train
         # topk is an index
@@ -125,7 +126,7 @@ def main():
                     'best_acc': best_acc,
                     'optimizer': optimizer.state_dict()
                 }
-                torch.save(obj, os.path.join(args.output, 'checkpoint_best.pth'))
+                torch.save(obj, os.path.join(args.output, 'LU_checkpoint_best.pth'))
 
 
 def inference(run, loader, model):

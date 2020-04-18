@@ -24,7 +24,7 @@ class myDataset(data.Dataset):
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
 
-        label_dict = {'UCEC': 0, 'PAAD': 1, 'CESC': 2}
+        label_dict = {'LUSC': 0, 'LUAD': 1, }
 
         patch_level_label = []
         grid = []
@@ -83,9 +83,9 @@ class myDataset(data.Dataset):
                 img = self.transform(img)
             return img
         elif self.mode == 2:
-            # slideIDX, coord, target = self.t_data[index]
-            img = Image.open(self.grid[index])
-            target = self.patch_labels[index]
+            grid_path, label = self.t_data[index]
+            img = Image.open(grid_path)
+            target = label
             # img = self.slides[slideIDX].read_region(coord, self.level, (self.size, self.size)).convert('RGB')
             # if self.mult != 1:
             #     img = img.resize((224, 224), Image.BILINEAR)

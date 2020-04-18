@@ -23,28 +23,39 @@ def split_train_test(data, train_ratio = 0.7):
     return train, test
 
 if __name__ == '__main__':
-    KICH = origin[origin['TypeName'] == 'KICH']
-    KIRC = origin[origin['TypeName'] == 'KIRC']
-    KIRP = origin[origin['TypeName'] == 'KIRP']
+    # KICH = origin[origin['TypeName'] == 'KICH']
+    # KIRC = origin[origin['TypeName'] == 'KIRC']
+    # KIRP = origin[origin['TypeName'] == 'KIRP']
+    #
+    # print(len(KICH), len(KIRC), len(KIRP))
+    #
+    # KICH = KICH[:]
+    # KIRC = KIRC[:150]
+    # KIRP = KIRP[:150]
+    #
+    # KICH_train, KICH_test = split_train_test(KICH)
+    # KIRC_train, KIRC_test = split_train_test(KIRC)
+    # KIRP_train, KIRP_test = split_train_test(KIRP)
 
-    print(len(KICH), len(KIRC), len(KIRP))
+    LUSC = origin[origin['TypeName'] == 'LUSC']
+    LUAD = origin[origin['TypeName'] == 'LUAD']
 
-    KICH = KICH[:]
-    KIRC = KIRC[:150]
-    KIRP = KIRP[:150]
+    print(len(LUSC), len(LUAD))
 
-    KICH_train, KICH_test = split_train_test(KICH)
-    KIRC_train, KIRC_test = split_train_test(KIRC)
-    KIRP_train, KIRP_test = split_train_test(KIRP)
+    LUSC = LUSC[:]
+    LUAD = LUAD[:240]
 
-    train = KICH_train.append(KIRC_train).append(KIRP_train)
-    test  = KICH_test.append(KIRC_test).append(KIRP_test)
+    LUSC_train, LUSC_test = split_train_test(LUSC)
+    LUAD_train, LUAD_test = split_train_test(LUAD)
+
+    train = LUSC_train.append(LUAD_train)
+    test  = LUSC_test.append(LUAD_test)
 
     print(len(train), len(test))
     print(train.head(4))
 
-    train.to_csv('./coords/KIPAN_ThreeTypes_Train.csv', index = None)
-    test.to_csv('./coords/KIPAN_ThreeTypes_Test.csv', index = None)
+    train.to_csv('./coords/LU_TwoTypes_Train.csv', index = None)
+    test.to_csv('./coords/LU_TwoTypes_Test.csv', index = None)
 
 
 
