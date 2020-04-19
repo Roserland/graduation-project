@@ -23,12 +23,12 @@ parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile clas
 parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
 parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
 parser.add_argument('--output', type=str, default='./', help='name of output file')
-parser.add_argument('--batch_size', type=int, default=128, help='mini-batch size (default: 512)')
+parser.add_argument('--batch_size', type=int, default=512, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
 parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
 parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
-parser.add_argument('--k', default=10, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+parser.add_argument('--k', default=50, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level = logging.INFO)
@@ -49,6 +49,12 @@ def main():
     model = models.resnet34(True)
     model.fc = nn.Linear(model.fc.in_features, 2)           # for trible classification
     model.cuda()
+
+    device_ids = range(torch.cuda.device_count())
+
+    # if necessary, mult-gpu training
+    if len(device_ids) > 1:
+        model = torch.nn.DaraParallel(model)
 
     criterion = nn.CrossEntropyLoss().cuda()
 
@@ -102,8 +108,10 @@ def main():
         print('Training\tEpoch: [{}/{}]\tLoss: {}'.format(epoch+1, args.nepochs, loss))
         logger.info('Training\tEpoch: [{}/{}]\tLoss: {}'.format(epoch+1, args.nepochs, loss))
         fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
-        fconv.write('{},loss,{}\n'.format(epoch+1,loss))
+        fconv.write('{},loss,{}\n'.format(epoch+1, loss))
         fconv.close()
+        
+        torch.save(model.state_dict(), os.path.join(args.output, 'LU_current_checkpoint.pth'))
 
         # Validation
         if (epoch + 1) % args.test_every == 0:
@@ -111,6 +119,8 @@ def main():
             probs = inference(epoch, val_loader, model)
             maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
             pred = [1 if x >= 0.5 else 0 for x in maxs]
+            logger.info('In validation, predicted probs are', pred)
+            print(pred)
             err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
             print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                                    fnr))
