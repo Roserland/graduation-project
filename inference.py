@@ -48,6 +48,8 @@ def main():
     # resnet-34, or could change the model for efficiency
     model = models.resnet34(True)
     model.fc = nn.Linear(model.fc.in_features, 2)           # for trible classification
+    pre_state_dict = torch.load('./checkponits/LU_V1.pth')['state_dict']
+    model.load_state_dict(pre_state_dict)
     model.cuda()
 
     device_ids = range(torch.cuda.device_count())
