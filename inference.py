@@ -57,7 +57,7 @@ def main():
 
     # if necessary, mult-gpu training
     if len(device_ids) > 1:
-        model = torch.nn.DaraParallel(model)
+        model = torch.nn.DataParallel(model)
 
     criterion = nn.CrossEntropyLoss().cuda()
 
@@ -121,9 +121,11 @@ def main():
             val_dset.setmode(1)
             probs = inference(epoch, val_loader, model)
             maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
+            logger.info('In validation, (most 128) predicted probs are', pred)
+            logger.info(maxs[:128])
             pred = [1 if x >= 0.5 else 0 for x in maxs]
-            logger.info('In validation, predicted probs are', pred)
-            print(pred)
+            # logger.info('In validation, predicted probs are', pred)
+            # print(pred)
             logger.info(pred)
             err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
             print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
