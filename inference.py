@@ -16,7 +16,7 @@ import logging
 
 from myDataset import myDataset
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 # ids = [0,1]
 
 parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile classifier training script')
@@ -26,9 +26,9 @@ parser.add_argument('--output', type=str, default='./', help='name of output fil
 parser.add_argument('--batch_size', type=int, default=512, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
-parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
+parser.add_argument('--test_every', default=4, type=int, help='test on val every (default: 10)')
 parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
-parser.add_argument('--k', default=50, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+parser.add_argument('--k', default=100, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level = logging.INFO)
@@ -48,11 +48,12 @@ def main():
     # resnet-34, or could change the model for efficiency
     model = models.resnet34(True)
     model.fc = nn.Linear(model.fc.in_features, 2)           # for trible classification
-    pre_state_dict = torch.load('./checkponits/LU_V1.pth')['state_dict']
+    pre_state_dict = torch.load('./checkpoints/LU_V2.pth')['state_dict']
     model.load_state_dict(pre_state_dict)
     model.cuda()
 
     device_ids = range(torch.cuda.device_count())
+    print(device_ids)
 
     # if necessary, mult-gpu training
     if len(device_ids) > 1:
@@ -123,6 +124,7 @@ def main():
             pred = [1 if x >= 0.5 else 0 for x in maxs]
             logger.info('In validation, predicted probs are', pred)
             print(pred)
+            logger.info(pred)
             err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
             print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                                    fnr))
