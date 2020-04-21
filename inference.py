@@ -98,6 +98,7 @@ def main():
         probs = inference(epoch, train_loader, model)
         print(probs.shape)
 
+
         # choss top-k patches with high probilities to train
         # topk is an index
         topk = group_argtopk(np.array(train_dset.patch_labels), probs, args.k)
@@ -120,15 +121,38 @@ def main():
         if (epoch) % args.test_every == 0:
             val_dset.setmode(1)
             probs = inference(epoch, val_loader, model)
-            maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
-            logger.info('In validation, (most 128) predicted probs are', maxs[:128])
-            logger.info(maxs[:128])
-            pred = [1 if x >= 0.5 else 0 for x in maxs]
-            # logger.info('In validation, predicted probs are', pred)
-            # print(pred)
-            logger.info(pred)
+            nan_num = np.isnan(probs).sum()
+            if nan_num > 0:
+                logger.info('NaN is in probs')
+                print('######################################################################################')
+            logger.info("probs shape:")
+            logger.info(probs.shape)
+            logger.info(probs)
+
+            val_labels = np.array(val_dset.patch_labels)
+
+            topk = np.array(group_argtopk(np.array(val_dset.patch_labels), probs, args.k))
+            logger.info('topk')
+            logger.info(topk)
+
+            test_prob = probs[topk]
+            test_labels = val_labels[topk]
+            print(test_prob)
+            print(test_labels)
+
+            print(np.sort(probs)[-args.k:])
+            logger.info(('most prob k patchs index'))
+            logger.info(np.sort(probs)[-args.k:])
+
+            # maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
+            # logger.info('In validation, (most 128) predicted probs are', maxs[:128])
+            logger.info(probs[:128])
+            pred = [1 if x >= 0.5 else 0 for x in probs]
+
             err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
             print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
+                                                                                   fnr))
+            logger.info('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                                    fnr))
             fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
             fconv.write('{},error,{}\n'.format(epoch + 1, err))
