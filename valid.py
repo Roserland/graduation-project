@@ -89,28 +89,37 @@ def main():
 
     epoch = 4
     val_dset.setmode(1)
-    probs = inference(epoch, val_loader, model)
 
+    probs = inference(epoch, val_loader, model)
     # check nan in probs
     nan_num = np.isnan(probs).sum()
     if nan_num > 0:
         logger.info('NaN is in probs')
         print('######################################################################################')
-
     logger.info("probs shape:")
     logger.info(probs.shape)
     logger.info(probs)
 
-    maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
+    val_labels = np.array(val_dset.patch_labels)
+
+    topk = np.array(group_argtopk(np.array(val_dset.patch_labels), probs, args.k))
+    test_prob = probs[topk]
+    test_labels = val_labels[topk]
+    print(test_prob)
+    print(test_labels)
+
+
+    # maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
     # print(maxs[:128])
-    logger.info('In validation, (most 128) predicted probs are', maxs[:128])
-    pred = [1 if x >= 0.5 else 0 for x in maxs]
+    logger.info('In validation, (most 10) predicted probs are')
+    logger.info(test_prob[:10])
+    pred = [1 if x >= 0.5 else 0 for x in test_prob]
     # logger.info('In validation, predicted probs are', pred)
     # print(pred)
     logger.info("predictions are, ")
     logger.info(pred)
 
-    err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
+    err, fpr, fnr = calc_err(pred, test_labels)
     print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                            fnr))
     fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
