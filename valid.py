@@ -71,7 +71,7 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = myDataset(csv_path='./coords/LU_TwoTypes_Train.csv', transform=trans)
+    # train_dset = myDataset(csv_path='./coords/LU_TwoTypes_Train.csv', transform=trans)
     # train_loader = torch.utils.data.DataLoader(
     #     train_dset,
     #     batch_size=args.batch_size, shuffle=False,
@@ -83,7 +83,7 @@ def main():
         num_workers=args.workers, pin_memory=False)
 
     # open output file
-    fconv = open(os.path.join(args.output, 'convergence.csv'), 'w')
+    fconv = open(os.path.join(args.output, 'valid_convergence.csv'), 'w')
     fconv.write('epoch,metric,value\n')
     fconv.close()
 
@@ -91,15 +91,25 @@ def main():
     val_dset.setmode(1)
     probs = inference(epoch, val_loader, model)
 
-    logger.info("probs shape:", probs.shape)
+    # check nan in probs
+    nan_num = np.isnan(probs).sum()
+    if nan_num > 0:
+        logger.info('NaN is in probs')
+        print('######################################################################################')
+
+    logger.info("probs shape:")
+    logger.info(probs.shape)
+    logger.info(probs)
 
     maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
-    print(maxs[:128])
+    # print(maxs[:128])
     logger.info('In validation, (most 128) predicted probs are', maxs[:128])
     pred = [1 if x >= 0.5 else 0 for x in maxs]
     # logger.info('In validation, predicted probs are', pred)
     # print(pred)
-    logger.info("predictions are, ", pred)
+    logger.info("predictions are, ")
+    logger.info(pred)
+
     err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
     print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                            fnr))
