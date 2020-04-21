@@ -28,7 +28,7 @@ parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
 parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
 parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
-parser.add_argument('--k', default=200, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+parser.add_argument('--k', default=50, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level = logging.INFO)
@@ -103,11 +103,15 @@ def main():
     val_labels = np.array(val_dset.patch_labels)
 
     topk = np.array(group_argtopk(np.array(val_dset.patch_labels), probs, args.k))
+    logger.info('topk')
+    logger.info(topk)
+
     test_prob = probs[topk]
     test_labels = val_labels[topk]
     print(test_prob)
     print(test_labels)
 
+    print(np.sort(topk)[:args.k])
 
     # maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
     # print(maxs[:128])
