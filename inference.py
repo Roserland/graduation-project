@@ -16,19 +16,19 @@ import logging
 
 from myDataset import myDataset
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 # ids = [0,1]
 
 parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile classifier training script')
 parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
 parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
 parser.add_argument('--output', type=str, default='./', help='name of output file')
-parser.add_argument('--batch_size', type=int, default=1024, help='mini-batch size (default: 512)')
+parser.add_argument('--batch_size', type=int, default=256, help='mini-batch size (default: 512)')
 parser.add_argument('--nepochs', type=int, default=100, help='number of epochs')
 parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
 parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
 parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
-parser.add_argument('--k', default=200, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+parser.add_argument('--k', default=1, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
 
 logger = logging.getLogger(__name__)
 logger.setLevel(level = logging.INFO)
@@ -48,9 +48,9 @@ def main():
     # resnet-34, or could change the model for efficiency
     model = models.resnet34(True)
     model.fc = nn.Linear(model.fc.in_features, 2)           # for trible classification
-    pre_state_dict = torch.load('./checkpoints/LU_V2.pth')['state_dict']
-    #pre_state_dict = torch.load('./checkpoints/LU_V3.pth')
-    model.load_state_dict(pre_state_dict)
+    # pre_state_dict = torch.load('./checkpoints/LU_V2.pth')['state_dict']
+    # #pre_state_dict = torch.load('./checkpoints/LU_V3.pth')
+    # model.load_state_dict(pre_state_dict)
     model.cuda()
 
     device_ids = range(torch.cuda.device_count())
@@ -71,12 +71,12 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = myDataset(csv_path='./coords/LU_TwoTypes_Train.csv', transform=trans)
+    train_dset = myDataset(csv_path='./coords/G_TwoTypes_Train.csv', transform=trans)
     train_loader = torch.utils.data.DataLoader(
         train_dset,
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=False)
-    val_dset = myDataset(csv_path='./coords/LU_TwoTypes_Test.csv', transform=trans)
+    val_dset = myDataset(csv_path='./coords/G_TwoTypes_Test.csv', transform=trans)
     val_loader = torch.utils.data.DataLoader(
         val_dset,
         batch_size=args.batch_size, shuffle=False,
@@ -91,21 +91,15 @@ def main():
     for epoch in range(args.nepochs):
         # for evaluation,
         train_dset.setmode(1)
-
         # slideIDX --> Patch_level label
-
         # get all problities of all patches in the loader
         probs = inference(epoch, train_loader, model)
         print(probs.shape)
-
-
-        # choss top-k patches with high probilities to train
-        # topk is an index
-        topk = group_argtopk(np.array(train_dset.patch_labels), probs, args.k)
+        # choose most K probable patch per slide, k = 2
+        topk = group_argtopk(np.array(train_dset.slideIDX), probs, args.k)
         # make train data, and shuffle it
         train_dset.maketraindata(topk)
         train_dset.shuffletraindata()
-
         # training part
         train_dset.setmode(2)
         loss = train(epoch, train_loader, model, criterion, optimizer)
@@ -115,7 +109,7 @@ def main():
         fconv.write('{},loss,{}\n'.format(epoch+1, loss))
         fconv.close()
         
-        torch.save(model.state_dict(), os.path.join(args.output, 'LU_current_checkpoint.pth'))
+        torch.save(model.state_dict(), os.path.join(args.output, 'G_current_checkpoint.pth'))
 
         # Validation
         if (epoch) % args.test_every == 0:
@@ -125,34 +119,13 @@ def main():
             if nan_num > 0:
                 logger.info('NaN is in probs')
                 print('######################################################################################')
-            logger.info("probs shape:")
-            logger.info(probs.shape)
-            logger.info(probs)
 
-            val_labels = np.array(val_dset.patch_labels)
+            maxs = group_max(np.array(val_dset.slideIDX), probs, len(val_dset.targets))
 
-            topk = np.array(group_argtopk(np.array(val_dset.patch_labels), probs, args.k))
-            logger.info('topk')
-            logger.info(topk)
+            pred = [1 if x >= 0.5 else 0 for x in maxs]
 
-            test_prob = probs[topk]
-            test_labels = val_labels[topk]
-            print(test_prob)
-            print(test_labels)
-
-            print(np.sort(probs)[-args.k:])
-            logger.info(('most prob k patchs index'))
-            logger.info(np.sort(probs)[-args.k:])
-
-            # maxs = group_max(np.array(val_dset.patch_labels), probs, len(val_dset.patch_labels))
-            # logger.info('In validation, (most 128) predicted probs are', maxs[:128])
-            logger.info(probs[:128])
-            pred = [1 if x >= 0.5 else 0 for x in probs]
-
-            err, fpr, fnr = calc_err(pred, val_dset.patch_labels)
+            err, fpr, fnr = calc_err(pred, val_dset.targets)
             print('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
-                                                                                   fnr))
-            logger.info('Validation\tEpoch: [{}/{}]\tError: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, err, fpr,
                                                                                    fnr))
             fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
             fconv.write('{},error,{}\n'.format(epoch + 1, err))
@@ -169,7 +142,7 @@ def main():
                     'best_acc': best_acc,
                     'optimizer': optimizer.state_dict()
                 }
-                torch.save(obj, os.path.join(args.output, 'LU_checkpoint_best.pth'))
+                torch.save(obj, os.path.join(args.output, 'G_checkpoint_best.pth'))
 
 
 def inference(run, loader, model):

@@ -26,8 +26,11 @@ class myDataset(data.Dataset):
 
         label_dict = {'LUSC': 0, 'LUAD': 1, }
 
+        wsi_level_label = [label_dict[x] for x in slides_label]
+
         patch_level_label = []
         grid = []
+        slide_IDX = []
         for i, wsi_direc in enumerate(slides_path):
             patch_name_list = os.listdir(wsi_direc)  # g is a slide directory path
 
@@ -38,6 +41,9 @@ class myDataset(data.Dataset):
             # patch label is WSI label
             temp_label = label_dict[slides_label[i]]
             patch_level_label.extend([temp_label] * len(patch_name_list))
+
+            slide_IDX.extend([i] * len(patch_name_list))
+
         print('Number of tiles: {}'.format(len(grid)))
 
         assert len(patch_level_label) == len(grid)
@@ -46,6 +52,8 @@ class myDataset(data.Dataset):
         self.patch_labels = patch_level_label
         self.transform = transform
         self.mode = None
+        self.targets = wsi_level_label
+        self.slideIDX = slide_IDX
         # self.mult = lib['mult']
         # self.size = int(np.round(224 * lib['mult']))
         # self.level = lib['level']
@@ -62,7 +70,7 @@ class myDataset(data.Dataset):
 
     def maketraindata(self, idxs):
         # prepare the (patch, patch_label)
-        self.t_data = [(self.grid[x], self.patch_labels[x]) for x in idxs]
+        self.t_data = [(self.slideIDX[x], self.grid[x], self.targets[self.slideIDX[x]]) for x in idxs]
 
     def shuffletraindata(self):
         # just shuffle
@@ -83,12 +91,9 @@ class myDataset(data.Dataset):
                 img = self.transform(img)
             return img
         elif self.mode == 2:
-            grid_path, label = self.t_data[index]
+            slideIDX, grid_path, target = self.t_data[index]
             img = Image.open(grid_path)
-            target = label
-            # img = self.slides[slideIDX].read_region(coord, self.level, (self.size, self.size)).convert('RGB')
-            # if self.mult != 1:
-            #     img = img.resize((224, 224), Image.BILINEAR)
+
             img = img.resize((224, 224), Image.BILINEAR)
 
             if self.transform is not None:
