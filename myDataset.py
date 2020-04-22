@@ -18,13 +18,13 @@ def addPrefix(prefix, fileName):
     return os.path.join(prefix, fileName)
 
 class myDataset(data.Dataset):
-    def __init__(self, csv_path='./coords/threeTypes_train.csv', transform=None):
+    def __init__(self, csv_path='./coords/G_TwoTypes_Train.csv', transform=None):
         coords = pd.read_csv(csv_path)
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
 
-        label_dict = {'LUSC': 0, 'LUAD': 1, }
+        label_dict = {'LGG': 0, 'GBM': 1, }
 
         wsi_level_label = [label_dict[x] for x in slides_label]
 
