@@ -62,22 +62,25 @@ def main():
     trans = transforms.Compose([transforms.ToTensor(), normalize])
 
     # load data
-    train_dset = myDataset(csv_path='./coords/G_TwoTypes_Train.csv', transform=trans)
-    train_loader = torch.utils.data.DataLoader(
-        train_dset,
-        batch_size=args.batch_size, shuffle=False,
-        num_workers=args.workers, pin_memory=False)
+
     val_dset = myDataset(csv_path='./coords/G_TwoTypes_Test.csv', transform=trans)
     val_loader = torch.utils.data.DataLoader(
         val_dset,
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=False)
-
-    train_dset.setmode(1)
     val_dset.setmode(1)
 
-    getMostProbPatchs(train_loader, train_dset, model, csv_name = './selected_train.csv')
     getMostProbPatchs(val_loader, val_dset, model, csv_name = './selected_test.csv')
+
+
+    train_dset = myDataset(csv_path='./coords/G_TwoTypes_Train.csv', transform=trans)
+    train_loader = torch.utils.data.DataLoader(
+        train_dset,
+        batch_size=args.batch_size, shuffle=False,
+        num_workers=args.workers, pin_memory=False)
+
+    train_dset.setmode(1)
+    getMostProbPatchs(train_loader, train_dset, model, csv_name = './selected_train.csv')
 
 
 def getMostProbPatchs(train_loader, train_dset, model, csv_name = './selected_train.csv'):
