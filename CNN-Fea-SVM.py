@@ -161,12 +161,12 @@ def pooling_by3Norm(fea_vector, wsi_indexs):
         res[i] = vec_3_norm
     return res
 
-def find_topk_features(_trian_data, _train_label, fea_num=100):
+def find_topk_features(_train_data, _train_label, fea_num=100):
     labels = list(Counter(_train_label).keys())
 
     # GBM 1  LGG 0
-    set_0 = _trian_data[_train_label == 0]
-    set_1 = _trian_data[_train_label == 1]
+    set_0 = _train_data[_train_label == 0]
+    set_1 = _train_data[_train_label == 1]
 
     diff = np.sum(set_0, axis=0) - np.sum(set_1, axis=0)
     diff = np.abs(diff)
