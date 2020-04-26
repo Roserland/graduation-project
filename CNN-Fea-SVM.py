@@ -248,9 +248,9 @@ def main():
     # select most 100 different features as the final feature inputed into SVM
     topk_fea_index = find_topk_features(_train_data=train_data, _train_label=train_label, fea_num=100)
 
-    svm_train_data = train_data[:, topk_fea_index]
-    svm_test_data  = test_data[:, topk_fea_index]
-    print(svm_train_data.shape, svm_test_data.shape)
+    svm_train_data = train_data[:, topk_fea_index].tolist()
+    svm_test_data  = test_data[:, topk_fea_index].tolist()
+    # print(svm_train_data.shape, svm_test_data.shape)
 
     svm_data_all = {
         'train_data':  svm_train_data,
