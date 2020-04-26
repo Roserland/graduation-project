@@ -107,7 +107,7 @@ class cnn_svm_dataset(data.Dataset):
         return len(self.grid)
 
 
-def extracter(loader, model, use_gpu = True,):
+def extracter(loader, d_set, model, use_gpu = True,):
     """
     extract 1x1000 feature vectors from the patch
     :param loader:
@@ -117,7 +117,7 @@ def extracter(loader, model, use_gpu = True,):
     """
     model.eval()
 
-    data_len = len(loader)
+    data_len = len(d_set)
 
     res = torch.FloatTensor(data_len, 512)
 
@@ -200,8 +200,8 @@ def main():
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=False)
 
-    train_feaVector = extracter(loader=train_loader, model=model)
-    val_feaVector = extracter(loader=val_loader, model=model)
+    train_feaVector = extracter(loader=train_loader, d_set= train_dset, model=model)
+    val_feaVector = extracter(loader=val_loader, d_set= val_dset, model=model)
 
     train_info = {
         'train_array':train_feaVector,
@@ -247,5 +247,6 @@ def main():
 
     print("WSI level acc using SVM is {}".format(acc))
 
-
+if __name__ == '__main__':
+    main()
 
