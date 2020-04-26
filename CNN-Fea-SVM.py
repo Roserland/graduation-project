@@ -126,7 +126,7 @@ def extracter(loader, d_set, model, use_gpu = True,):
         for i, (input, label) in enumerate(loader):
             print('Extract\tBatch: [{}/{}]'.format(i+1, len(loader)))
             input = input.cuda()
-            output = model(input).resize(len(loader), 512)
+            output = model(input).view((len(input), 512))
             print(output.shape)
             res[i * args.batch_size:i * args.batch_size + input.size(0)] = output.detach()[:].clone()
 
