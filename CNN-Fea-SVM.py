@@ -250,7 +250,7 @@ def main():
 
     svm_train_data = train_data[:, topk_fea_index].tolist()
     svm_test_data  = test_data[:, topk_fea_index].tolist()
-    # print(svm_train_data.shape, svm_test_data.shape)
+    print(np.shape(svm_train_data), np.shape(svm_test_data))
 
     svm_data_all = {
         'train_data':  svm_train_data,
