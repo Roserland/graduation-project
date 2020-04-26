@@ -165,8 +165,10 @@ def find_topk_features(_train_data, _train_label, fea_num=100):
     labels = list(Counter(_train_label).keys())
 
     # GBM 1  LGG 0
-    set_0 = _train_data[_train_label == 0]
-    set_1 = _train_data[_train_label == 1]
+    train_label = np.array(_train_label)
+    print(train_label.shape)
+    set_0 = _train_data[train_label == 0]
+    set_1 = _train_data[train_label == 1]
     print(set_0.shape)
     print(set_1.shape)
 
