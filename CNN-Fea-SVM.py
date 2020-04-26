@@ -167,10 +167,12 @@ def find_topk_features(_train_data, _train_label, fea_num=100):
     # GBM 1  LGG 0
     set_0 = _train_data[_train_label == 0]
     set_1 = _train_data[_train_label == 1]
+    print(set_0.shape)
+    print(set_1.shape)
 
     diff = np.sum(set_0, axis=0) - np.sum(set_1, axis=0)
     diff = np.abs(diff)
-
+    print(diff[:20])
     # find most distinguish 100 features
     # as the final feature vector
     top_k_index = diff.argsort(diff)[::-1]
