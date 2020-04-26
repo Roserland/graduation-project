@@ -15,6 +15,7 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 from collections import Counter
 from sklearn.svm import SVC
+from sklearn.externals import joblib
 import logging
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
@@ -63,8 +64,9 @@ class cnn_svm_dataset(data.Dataset):
                  label_dict = {'GBM': 0, 'LGG': 1, },
                  transform=None):
         # load, then shuffle the data
-        coords = pd.read_csv(csv_path)[:50]
+        coords = pd.read_csv(csv_path)
         coords = coords.sample(frac=1.0)
+        coords = coords[:10]
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
@@ -265,6 +267,8 @@ def main():
     clf = SVC(kernel='rbf')
     print('SVM training')
     clf.fit(svm_train_data, train_label)
+    # preserve the model
+    joblib.dump(clf, './svm_model_v1.m')
     print('SVM predicting')
     pred = clf.predict(svm_test_data)
 
