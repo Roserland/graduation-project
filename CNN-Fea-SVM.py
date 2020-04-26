@@ -164,7 +164,7 @@ def pooling_by3Norm(fea_vector, wsi_indexs):
     return res
 
 def find_topk_features(_train_data, _train_label, fea_num=100):
-    labels = list(Counter(_train_label).keys())
+    print(Counter(_train_label))
 
     # GBM 1  LGG 0
     train_label = np.array(_train_label)
@@ -183,7 +183,7 @@ def find_topk_features(_train_data, _train_label, fea_num=100):
     print('1: ', top_k_index)
     top_k_index = top_k_index[:fea_num]
     print(top_k_index)
-    
+
     return top_k_index
 
 
@@ -250,6 +250,7 @@ def main():
 
     svm_train_data = train_data[:, topk_fea_index]
     svm_test_data  = test_data[:, topk_fea_index]
+    print(svm_train_data.shape, svm_test_data.shape)
 
     svm_data_all = {
         'train_data':  svm_train_data,
