@@ -66,7 +66,7 @@ class cnn_svm_dataset(data.Dataset):
         # load, then shuffle the data
         coords = pd.read_csv(csv_path)
         coords = coords.sample(frac=1.0)
-        coords = coords[:10]
+        # coords = coords[:10]
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
@@ -170,21 +170,16 @@ def find_topk_features(_train_data, _train_label, fea_num=100):
 
     # GBM 1  LGG 0
     train_label = np.array(_train_label)
-    print(train_label.shape)
     set_0 = _train_data[train_label == 0]
     set_1 = _train_data[train_label == 1]
-    print(set_0.shape)
-    print(set_1.shape)
 
     diff = np.sum(set_0, axis=0) - np.sum(set_1, axis=0)
     diff = np.abs(diff)
-    print(diff[:20])
     # find most distinguish 100 features
     # as the final feature vector
     top_k_index = diff.argsort()[::-1][:fea_num]
-    print('1: ', top_k_index)
     top_k_index = top_k_index[:fea_num]
-    print(top_k_index)
+    # print(top_k_index)
 
     return top_k_index
 
