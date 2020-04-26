@@ -63,6 +63,7 @@ class cnn_svm_dataset(data.Dataset):
                  label_dict = {'GBM': 0, 'LGG': 1, },
                  transform=None):
         coords = pd.read_csv(csv_path)[:5]
+        coords = coords.sample(frac=1.0)
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
