@@ -15,6 +15,7 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 from collections import Counter
 from sklearn.svm import SVC
+import logging
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 
@@ -31,6 +32,14 @@ parser.add_argument('--workers', default=2, type=int, help='number of data loadi
 parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
 parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
 parser.add_argument('--k', default=200, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(level = logging.INFO)
+handler = logging.FileHandler("./CNN-FEA-SVM_log.txt")
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class res34(nn.Module):
     def __init__(self):
@@ -53,7 +62,7 @@ class cnn_svm_dataset(data.Dataset):
     def __init__(self, csv_path='./coords/G_TwoTypes_train.csv',
                  label_dict = {'GBM': 0, 'LGG': 1, },
                  transform=None):
-        coords = pd.read_csv(csv_path)[:10]
+        coords = pd.read_csv(csv_path)[:5]
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
@@ -203,6 +212,9 @@ def main():
 
     train_feaVector = extracter(loader=train_loader, d_set= train_dset, model=model)
     val_feaVector = extracter(loader=val_loader, d_set= val_dset, model=model)
+    logger.info("train_feaVector.shape, val_feaVector.shape:" + str(train_feaVector.shape) + ';' +
+                str(val_feaVector.shape))
+    print(train_feaVector.shape, val_feaVector.shape)
 
     train_info = {
         'train_array':train_feaVector,
