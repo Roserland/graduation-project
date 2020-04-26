@@ -119,13 +119,14 @@ def extracter(loader, model, use_gpu = True,):
 
     data_len = len(loader)
 
-    res = torch.FloatTensor(data_len, 1000)
+    res = torch.FloatTensor(data_len, 512)
 
     with torch.no_grad():
         for i, (input, label) in enumerate(loader):
             print('Extract\tBatch: [{}/{}]'.format(i+1, len(loader)))
             input = input.cuda()
             output = model(input)
+            print(output.shape)
             res[i * args.batch_size:i * args.batch_size + input.size(0)] = output.detach()[:].clone()
 
     return res.cpu().numpy()
