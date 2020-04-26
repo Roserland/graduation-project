@@ -118,6 +118,7 @@ def extracter(loader, d_set, model, use_gpu = True,):
     model.eval()
 
     data_len = len(d_set)
+    print("data length is {}".format(data_len))
 
     res = torch.FloatTensor(data_len, 512)
 
