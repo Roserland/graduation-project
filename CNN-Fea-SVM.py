@@ -173,7 +173,7 @@ def find_topk_features(_train_data, _train_label, fea_num=100):
 
     # find most distinguish 100 features
     # as the final feature vector
-    top_k_index = diff.argsort(diff)[::-1][:fea_num]
+    top_k_index = diff.argsort(diff)[::-1][:fea_num].astype(int)
 
     return top_k_index
 
