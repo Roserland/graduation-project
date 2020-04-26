@@ -53,7 +53,7 @@ class cnn_svm_dataset(data.Dataset):
     def __init__(self, csv_path='./coords/G_TwoTypes_train.csv',
                  label_dict = {'GBM': 0, 'LGG': 1, },
                  transform=None):
-        coords = pd.read_csv(csv_path)
+        coords = pd.read_csv(csv_path)[:10]
 
         slides_path = coords['Path'].to_list()
         slides_label = coords['TypeName'].to_list()
