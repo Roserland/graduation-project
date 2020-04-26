@@ -146,6 +146,7 @@ def pooling_by3Norm(fea_vector, wsi_indexs):
     assert wsi_indexs[-1] == len(fea_vector)
     print("feature_vec shape", fea_vector.shape)
     res = np.zeros((len(wsi_indexs)-1, fea_vector.shape[1]))
+    print(res.shape)
 
     for i in range(len(wsi_indexs)-1):
         start = wsi_indexs[i]
@@ -153,11 +154,11 @@ def pooling_by3Norm(fea_vector, wsi_indexs):
         curr_wsi_vectors = fea_vector[start:end]
 
         vec_3_norm = np.linalg.norm(x=curr_wsi_vectors, axis=0, keepdims=False)
+        # shape: (512,)
         print(vec_3_norm.shape)
-        assert vec_3_norm.shape == (1, fea_vector.shape[1])
+        # assert vec_3_norm.shape == (1, fea_vector.shape[1])
 
         res[i] = vec_3_norm
-
     return res
 
 def find_topk_features(_trian_data, _train_label, fea_num=100):
