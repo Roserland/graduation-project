@@ -145,7 +145,7 @@ def extracter(loader, d_set, model, use_gpu = True,):
 def pooling_by3Norm(fea_vector, wsi_indexs):
     assert wsi_indexs[-1] == len(fea_vector)
 
-    res = np.zeros(len(wsi_indexs)-1, fea_vector.shape[1])
+    res = np.zeros((len(wsi_indexs)-1, fea_vector.shape[1]))
 
     for i in range(len(wsi_indexs)-1):
         start = wsi_indexs[i]
