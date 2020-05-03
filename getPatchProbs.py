@@ -19,9 +19,21 @@ from myDataset import myDataset
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
 best_acc = 0
 
+parser = argparse.ArgumentParser(description='ABB')
+parser.add_argument('--output', type=str, default='./', help='name of output file')
+parser.add_argument('--batch_size', type=int, default=256, help='mini-batch size (default: 512)')
+parser.add_argument('--nepochs', type=int, default=50, help='number of epochs')
+parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
+parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
+parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
+parser.add_argument('--k', default=1, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+
 
 def main():
     global args, best_acc
+
+    args = parser.parse_args()
+
     # resnet-34, or could change the model for efficiency
     model = models.resnet34(True)
     model.fc = nn.Linear(model.fc.in_features, 2)  # for trible classification
