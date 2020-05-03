@@ -87,9 +87,9 @@ def main():
         val_loss, val_fpr, val_fnr = test_single(epoch, embedder, rnn, val_loader, criterion)
         train_err = (train_fpr + train_fnr) / 2
         val_err = (val_fpr + val_fnr) / 2
-        fconv = open(os.path.join(args.output, 'rnn_convergence.csv'), 'a')
+        fconv = open(os.path.join(args.output, 'sorted_rnn_convergence.csv'), 'a')
         fconv.write(
-            '{},{},{},{},{},{},{}\n'.format(epoch + 1, train_loss, train_fpr, train_fnr, train_err,
+            '{},{},{},{},{},{},{},{},{}\n'.format(epoch + 1, train_loss, train_fpr, train_fnr, train_err,
                                             val_loss, val_fpr, val_fnr, val_err))
         fconv.close()
 
@@ -101,7 +101,7 @@ def main():
                 'epoch': epoch + 1,
                 'state_dict': rnn.state_dict()
             }
-            torch.save(obj, os.path.join(args.output, 'rnn_checkpoint_best.pth'))
+            torch.save(obj, os.path.join(args.output, 'sorted_rnn_checkpoint_best.pth'))
 
 
 def train_single(epoch, embedder, rnn, loader, criterion, optimizer):
@@ -170,8 +170,10 @@ def test_single(epoch, embedder, rnn, loader, criterion):
     running_loss = running_loss / len(loader.dataset)
     running_fps = running_fps / (np.array(loader.dataset.targets) == 0).sum()
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
-    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, running_loss,
-                                                                           running_fps, running_fns))
+    running_err = (running_fns + running_fps) / 2
+
+    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.nepochs, running_loss,
+                                                                           running_fps, running_fns, running_err))
     return running_loss, running_fps, running_fns
 
 
