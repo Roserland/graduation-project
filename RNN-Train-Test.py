@@ -71,7 +71,8 @@ def main():
     cudnn.benchmark = True
 
     torch.save(rnn.state_dict(), os.path.join(args.output, 'rnn_G_current_checkpoint.pth'))
-    fconv = open(os.path.join(args.output, 'rnn_convergence.csv'), 'w')
+    csv_name = 'rnn_convergence_' + str(args.s) + '.scv'
+    fconv = open(os.path.join(args.output, csv_name), 'w')
     fconv.write('epoch,train.loss,train.fpr,train.fnr,val.loss,val.fpr,val.fnr\n')
     fconv.close()
 
@@ -79,13 +80,14 @@ def main():
 
         train_loss, train_fpr, train_fnr = train_single(epoch, embedder, rnn, train_loader, criterion, optimizer)
         val_loss, val_fpr, val_fnr = test_single(epoch, embedder, rnn, val_loader, criterion)
-
-        fconv = open(os.path.join(args.output, 'convergence.csv'), 'a')
+        val_err = (val_fpr + val_fnr) / 2
+        fconv = open(os.path.join(args.output, csv_name), 'a')
         fconv.write(
             '{},{},{},{},{},{},{}\n'.format(epoch + 1, train_loss, train_fpr, train_fnr, val_loss, val_fpr, val_fnr))
         fconv.close()
 
         val_err = (val_fpr + val_fnr) / 2
+        print(val_err)
         if 1 - val_err >= best_acc:
             best_acc = 1 - val_err
             obj = {
@@ -126,8 +128,9 @@ def train_single(epoch, embedder, rnn, loader, criterion, optimizer):
     running_loss = running_loss / len(loader.dataset)
     running_fps = running_fps / (np.array(loader.dataset.targets) == 0).sum()
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
-    print('Training - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, running_loss,
-                                                                         running_fps, running_fns))
+    error = (running_fps + running_fns) /2
+    print('Training - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.nepochs, running_loss,
+                                                                         running_fps, running_fns, error))
     return running_loss, running_fps, running_fns
 
 
@@ -160,8 +163,9 @@ def test_single(epoch, embedder, rnn, loader, criterion):
     running_loss = running_loss / len(loader.dataset)
     running_fps = running_fps / (np.array(loader.dataset.targets) == 0).sum()
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
-    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}'.format(epoch + 1, args.nepochs, running_loss,
-                                                                           running_fps, running_fns))
+    error = (running_fps + running_fns) /2
+    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.nepochs, running_loss,
+                                                                           running_fps, running_fns, error))
     return running_loss, running_fps, running_fns
 
 
