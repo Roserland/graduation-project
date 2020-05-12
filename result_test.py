@@ -137,7 +137,8 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
         y = i // 5
         print("patch coord is {}".format((x, y)))
 
-        temp_img_arr = np.array(Image.open(grid_path[i]))
+        img = Image.open(grid_path[i]).resize((512, 512), Image.BILINEAR)
+        temp_img_arr = np.array(img)
         print("img array shape is {}".format(temp_img_arr.shape))
         res[x*512:x*512+512, y*512:y*512+512, :] = temp_img_arr
 
@@ -145,7 +146,7 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
 
     img_name = os.path.basename(grid_path[0])[:23] + '.jpg'
     print("case {} is merging".format(img_name))
-    res_img.save(img_name, 'jpg')
+    res_img.save(img_name)
 
 
 
