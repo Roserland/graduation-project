@@ -110,7 +110,7 @@ def main():
 
     rnn = rnn_single(128)
     rnn_state_dict = torch.load("./sorted_rnn_checkpoint_best.pth")["state_dict"]
-    rnn.load(rnn_state_dict)
+    rnn.load_state_dict(rnn_state_dict)
     rnn = rnn.cuda()
 
     criterion = nn.CrossEntropyLoss().cuda()
@@ -146,7 +146,7 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
 
     img_name = os.path.basename(grid_path[0])[:23] + '.jpg'
     print("case {} is merging".format(img_name))
-    res_img.save(img_name)
+    res_img.save(os.path.join(merge_dir, img_name))
 
 
 
