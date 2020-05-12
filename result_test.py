@@ -143,9 +143,9 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
 
     res_img = Image.fromarray(np.uint8(res))
 
-    img_name = os.path.basename(grid_path[0])[:23]
+    img_name = os.path.basename(grid_path[0])[:23] + '.jpg'
     print("case {} is merging".format(img_name))
-    res_img.save(img_name, 'JPG')
+    res_img.save(img_name, 'jpg')
 
 
 
