@@ -113,10 +113,17 @@ def main():
     rnn.load_state_dict(rnn_state_dict)
     rnn = rnn.cuda()
 
+    print("\n***** In CG-CNN *****")
+    print("demo_pred is ", demo_pred)
+    print("origin label:", demo_data.targets)
+    print("\n")
+    
     criterion = nn.CrossEntropyLoss().cuda()
     val_loss, val_fpr, val_fnr = test_single(1, embedder, rnn, rnn_demo_loader, criterion)
 
-    print("In RNN test, error is {}".format(val_fnr + val_fpr))
+
+    print("\n***** In CG-CNN-Select10 *****")
+    print("In RNN test, error is {}".format((val_fnr + val_fpr)/2.0))
     print("RNN demo complete.\n")
 
 
@@ -385,6 +392,8 @@ def errors(output, target):
     _, pred = output.topk(1, 1, True, True)
     pred = pred.squeeze().cpu().numpy()
     real = target.numpy()
+    print("origin labels :", real)
+    print("predictions   :", pred)
     neq = pred != real
     fps = float(np.logical_and(pred == 1, neq).sum())
     fns = float(np.logical_and(pred == 0, neq).sum())
