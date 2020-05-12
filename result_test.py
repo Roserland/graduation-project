@@ -134,12 +134,12 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
 
     for i in range(10):
         x = i % 5
-        y = i - x
+        y = i // 5
         print("patch coord is {}".format((x, y)))
 
         temp_img_arr = np.array(Image.open(grid_path[i]))
         print("img array shape is {}".format(temp_img_arr.shape))
-        res[x*512:x*512+512, y*512:y*512+512, :] = temp_img_arr
+        res[y*512:y*512+512, x*512:x*512+512, :] = temp_img_arr
 
     res_img = Image.fromarray(res)
 
