@@ -141,7 +141,7 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
         print("img array shape is {}".format(temp_img_arr.shape))
         res[x*512:x*512+512, y*512:y*512+512, :] = temp_img_arr
 
-    res_img = Image.fromarray(res)
+    res_img = Image.fromarray(np.uint8(res))
 
     img_name = os.path.basename(grid_path[0])[:23]
     print("case {} is merging".format(img_name))
