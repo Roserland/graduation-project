@@ -298,7 +298,7 @@ def train_single(epoch, embedder, rnn, loader, criterion, optimizer):
     running_fns = 0.
 
     for i, (inputs, target) in enumerate(loader):
-        print('Training - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, args.nepochs, i + 1, len(loader)))
+        print('Training - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, 100, i + 1, len(loader)))
 
         batch_size = inputs[0].size(0)
         rnn.zero_grad()
@@ -323,7 +323,7 @@ def train_single(epoch, embedder, rnn, loader, criterion, optimizer):
     running_fps = running_fps / (np.array(loader.dataset.targets) == 0).sum()
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
     running_err = (running_fns + running_fps) / 2
-    print('Training - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.nepochs, running_loss,
+    print('Training - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, 100, running_loss,
                                                                          running_fps, running_fns, running_err))
     return running_loss, running_fps, running_fns
 
@@ -336,7 +336,7 @@ def test_single(epoch, embedder, rnn, loader, criterion):
 
     with torch.no_grad():
         for i, (inputs, target) in enumerate(loader):
-            print('Validating - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, args.nepochs, i + 1, len(loader)))
+            print('Validating - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, 100, i + 1, len(loader)))
 
             batch_size = inputs[0].size(0)
 
@@ -359,7 +359,7 @@ def test_single(epoch, embedder, rnn, loader, criterion):
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
     running_err = (running_fns + running_fps) / 2
 
-    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.nepochs, running_loss,
+    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, 100, running_loss,
                                                                            running_fps, running_fns, running_err))
     return running_loss, running_fps, running_fns
 
