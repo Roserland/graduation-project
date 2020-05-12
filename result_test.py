@@ -34,14 +34,15 @@ import logging
 
 
 def main():
-    demo_data = myDataset(csv_path='./coords/G_1_WSI.csv')
-
     # load libraries
     normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.1, 0.1, 0.1])
     trans = transforms.Compose([
         transforms.ToTensor(),
         normalize
     ])
+
+    demo_data = myDataset(csv_path='./coords/G_1_WSI.csv', transform=trans)
+    demo_data.setmode(1)
 
     demo_loader = torch.utils.data.DataLoader(
         demo_data,
@@ -68,6 +69,7 @@ def main():
     print("origin label:", demo_data.targets)
 
     demo_data.maketraindata(demo_topk)
+    demo_data.make_demo_grid()
 
     demo_paths = demo_data.demo_path
 
@@ -93,6 +95,8 @@ def main():
     embedder.eval()
 
     rnn = rnn_single(128)
+    rnn_state_dict = torch.load("./sorted_rnn_checkpoint_best.pth")["state_dict"]
+    rnn.load(rnn_state_dict)
     rnn = rnn.cuda()
 
     criterion = nn.CrossEntropyLoss().cuda()
