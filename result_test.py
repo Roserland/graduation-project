@@ -32,8 +32,22 @@ import torchvision.transforms as transforms
 import torchvision.models as models
 import logging
 
+parser = argparse.ArgumentParser(description='MIL-nature-medicine-2019 tile classifier training script')
+parser.add_argument('--train_lib', type=str, default='', help='path to train MIL library binary')
+parser.add_argument('--valid', type=bool, default=True, help='path to validation MIL library binary. If present.')
+parser.add_argument('--output', type=str, default='./', help='name of output file')
+parser.add_argument('--batch_size', type=int, default=256, help='mini-batch size (default: 512)')
+parser.add_argument('--nepochs', type=int, default=50, help='number of epochs')
+parser.add_argument('--workers', default=2, type=int, help='number of data loading workers (default: 4)')
+parser.add_argument('--test_every', default=2, type=int, help='test on val every (default: 10)')
+parser.add_argument('--weights', default=0.5, type=float, help='unbalanced positive class weight (default: 0.5, balanced classes)')
+parser.add_argument('--k', default=1, type=int, help='top k tiles are assumed to be of the same class as the slide (default: 1, standard MIL)')
+
 
 def main():
+    global args
+    args = parser.parse_args()
+
     # load libraries
     normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.1, 0.1, 0.1])
     trans = transforms.Compose([
@@ -46,7 +60,7 @@ def main():
 
     demo_loader = torch.utils.data.DataLoader(
         demo_data,
-        batch_size=10, shuffle=False,
+        batch_size=args.batch_size, shuffle=False,
         num_workers=2, pin_memory=False)
 
     # open output file
@@ -121,9 +135,10 @@ def merge_patchs(grid_path, merge_dir = './demo_merges/'):
     for i in range(10):
         x = i % 5
         y = i - x
-        print(x, y)
+        print("patch coord is {}".format((x, y)))
 
         temp_img_arr = np.array(Image.open(grid_path[i]))
+        print("img array shape is {}".format(temp_img_arr.shape))
         res[x, y, :] = temp_img_arr
 
     res_img = Image.fromarray(res)
@@ -139,10 +154,10 @@ def inference(run, loader, model):
     probs = torch.FloatTensor(len(loader.dataset))
     with torch.no_grad():
         for i, input in enumerate(loader):
-            print('Inference\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(run+1, 100, i+1, len(loader)))
+            print('Inference\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(run+1, args.nepochs, i+1, len(loader)))
             input = input.cuda()
             output = F.softmax(model(input), dim=1)
-            probs[i*10:i*10+input.size(0)] = output.detach()[:,1].clone()
+            probs[i*args.batch_size:i*args.batch_size+input.size(0)] = output.detach()[:,1].clone()
     return probs.cpu().numpy()
 
 def train(run, loader, model, criterion, optimizer):
@@ -199,6 +214,7 @@ class myDataset(data.Dataset):
         label_dict = {'LGG': 0, 'GBM': 1, }
 
         wsi_level_label = [label_dict[x] for x in slides_label]
+        print("In demo labels are:", wsi_level_label)
 
         patch_level_label = []
         grid = []
@@ -298,7 +314,7 @@ def train_single(epoch, embedder, rnn, loader, criterion, optimizer):
     running_fns = 0.
 
     for i, (inputs, target) in enumerate(loader):
-        print('Training - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, 100, i + 1, len(loader)))
+        print('Training - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, args.nepochs, i + 1, len(loader)))
 
         batch_size = inputs[0].size(0)
         rnn.zero_grad()
@@ -323,7 +339,7 @@ def train_single(epoch, embedder, rnn, loader, criterion, optimizer):
     running_fps = running_fps / (np.array(loader.dataset.targets) == 0).sum()
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
     running_err = (running_fns + running_fps) / 2
-    print('Training - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, 100, running_loss,
+    print('Training - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.ep, running_loss,
                                                                          running_fps, running_fns, running_err))
     return running_loss, running_fps, running_fns
 
@@ -336,7 +352,7 @@ def test_single(epoch, embedder, rnn, loader, criterion):
 
     with torch.no_grad():
         for i, (inputs, target) in enumerate(loader):
-            print('Validating - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, 100, i + 1, len(loader)))
+            print('Validating - Epoch: [{}/{}]\tBatch: [{}/{}]'.format(epoch + 1, args.nepochs, i + 1, len(loader)))
 
             batch_size = inputs[0].size(0)
 
@@ -359,7 +375,7 @@ def test_single(epoch, embedder, rnn, loader, criterion):
     running_fns = running_fns / (np.array(loader.dataset.targets) == 1).sum()
     running_err = (running_fns + running_fps) / 2
 
-    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, 100, running_loss,
+    print('Validating - Epoch: [{}/{}]\tLoss: {}\tFPR: {}\tFNR: {}\tERR: {}'.format(epoch + 1, args.nepochs, running_loss,
                                                                            running_fps, running_fns, running_err))
     return running_loss, running_fps, running_fns
 
