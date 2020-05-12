@@ -139,10 +139,10 @@ def inference(run, loader, model):
     probs = torch.FloatTensor(len(loader.dataset))
     with torch.no_grad():
         for i, input in enumerate(loader):
-            print('Inference\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(run+1, args.nepochs, i+1, len(loader)))
+            print('Inference\tEpoch: [{}/{}]\tBatch: [{}/{}]'.format(run+1, 100, i+1, len(loader)))
             input = input.cuda()
             output = F.softmax(model(input), dim=1)
-            probs[i*args.batch_size:i*args.batch_size+input.size(0)] = output.detach()[:,1].clone()
+            probs[i*10:i*10+input.size(0)] = output.detach()[:,1].clone()
     return probs.cpu().numpy()
 
 def train(run, loader, model, criterion, optimizer):
