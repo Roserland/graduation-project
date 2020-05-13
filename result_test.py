@@ -99,7 +99,7 @@ def main():
                             transform=trans)
     rnn_demo_loader = torch.utils.data.DataLoader(
                         rnn_demo_dset,
-                        batch_size=10, shuffle=True,
+                        batch_size=args.batch_size, shuffle=False,
                         num_workers=2, pin_memory=False)
     # make model
     embedder = ResNetEncoder('./G_checkpoint_best.pth')
@@ -117,12 +117,11 @@ def main():
     print("demo_pred is ", demo_pred)
     print("origin label:", demo_data.targets)
     print("\n")
-    
+
+    print("\n***** In CG-CNN-Select10 *****")
     criterion = nn.CrossEntropyLoss().cuda()
     val_loss, val_fpr, val_fnr = test_single(1, embedder, rnn, rnn_demo_loader, criterion)
 
-
-    print("\n***** In CG-CNN-Select10 *****")
     print("In RNN test, error is {}".format((val_fnr + val_fpr)/2.0))
     print("RNN demo complete.\n")
 
